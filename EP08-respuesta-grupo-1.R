@@ -1,18 +1,23 @@
+# Grupo número 1
+# Integrante Ángel Bastián Vilches Urrutia
+# Integrante Matías Andrés Colil Colil
+# Integrante Matías Fernando Yáñez Muñoz
+
 # Obtención de datos
 datos <- read.csv2(file.choose(),
                    stringsAsFactors = TRUE)
 datos[["id"]] <- factor(datos[["id"]])
 
 # Librerías
-if(!require(ggpubr)){
+if (!require(ggpubr)) {
   install.packages("ggpubr", dependencies = TRUE)
   require(ggpubr)
 }
-if(!require(ez)){
+if (!require(ez)) {
   install.packages("ez", dependencies = TRUE)
   require(ez)
 }
-if(!require(dplyr)){
+if (!require(dplyr)) {
   install.packages("dplyr", dependencies = TRUE)
   require(dplyr)
 }
@@ -43,9 +48,9 @@ if(!require(dplyr)){
 # Se filtran los datos de interés:
 datos <- datos %>% filter(tiempo == "semana_10")
 datos <- datos %>% filter(variedad == "Richard" |
-                          variedad == "Pink Lady" |
-                          variedad == "Golden" |
-                          variedad == "Fuji")
+                            variedad == "Pink Lady" |
+                            variedad == "Golden" |
+                            variedad == "Fuji")
 datos <- droplevels(datos)
 
 # Se procede con la verificación de condiciones para el uso de ANOVA para 
@@ -60,8 +65,8 @@ datos <- droplevels(datos)
 # En tercer lugar, se realiza un gráfico Q-Q para confirmar el cumplimiento
 # de la tercera condición:
 graficoQQ <- ggqqplot(datos,
-                      x = "peso" ,
-                      y = "variedad" ,
+                      x = "peso",
+                      y = "variedad",
                       color = "variedad")
 graficoQQ <- graficoQQ + facet_wrap(~ variedad)
 graficoQQ <- graficoQQ + rremove("x.ticks") + rremove("x.text")
@@ -103,3 +108,4 @@ print(summary(prueba_ANOVA[["aov"]]))
 # se observan diferencias entre los grupos analizados y por lo tanto no se 
 # requiere de mayores detalles respecto del hallazgo de diferencias globales
 # entre los grupos dado que no se registran en el análisis de varianza (ANOVA).
+

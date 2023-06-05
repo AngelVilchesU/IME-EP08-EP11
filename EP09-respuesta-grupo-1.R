@@ -1,21 +1,26 @@
+# Grupo número 1
+# Integrante Ángel Bastián Vilches Urrutia
+# Integrante Matías Andrés Colil Colil
+# Integrante Matías Fernando Yáñez Muñoz
+
 # Obtención de datos
 datos <- read.csv2(file.choose(),
                    stringsAsFactors = TRUE)
 
 # Librerías
-if(!require(dplyr)){
+if (!require(dplyr)) {
   install.packages("dplyr", dependencies = TRUE)
   require(dplyr)
 }
-if(!require(ggpubr)){
+if (!require(ggpubr)) {
   install.packages("ggpubr", dependencies = TRUE)
   require(ggpubr)
 }
-if(!require(tidyverse)){
+if (!require(tidyverse)) {
   install.packages("tidyverse", dependencies = TRUE)
   require(tidyverse)
 }
-if(!require(ez)){
+if (!require(ez)) {
   install.packages("ez", dependencies = TRUE)
   require(ez)
 }
@@ -30,17 +35,17 @@ if(!require(ez)){
 # discreta) que determina un orden de consumo según el alimento asociado,
 # Inicial (variable numérica continua) aludiendo al peso del gato (en
 # kilogramos) previo al comienzo del experimento, Pollo (variable numérica
-# continua) aludiendo al peso del gato (en kilogramos) tras un mes alimentandose
+# continua) aludiendo al peso del gato (en kilogramos) tras un mes alimentándose
 # con pollo, Res (variable numérica continua) aludiendo al peso del gato (en
-# kilogramos) tras un mes alimentandose con res, Conejo (variable numérica
-# continua) aludiendo al peso del gato (en kilogramos) tras un mes alimentandose
+# kilogramos) tras un mes alimentándose con res, Conejo (variable numérica
+# continua) aludiendo al peso del gato (en kilogramos) tras un mes alimentándose
 # con conejo, Pescado (variable numérica continua) aludiendo al peso del gato 
-# (en kilogramos) tras un mes alimentandose con pescado y finalmente, la
-# variables Pato (variable numérica continua) aludiendo al peso del gato (en
-# kilogramos) tras un mes alimentandose con pato.
+# (en kilogramos) tras un mes alimentándose con pescado y finalmente, la
+# variable Pato (variable numérica continua) aludiendo al peso del gato (en
+# kilogramos) tras un mes alimentándose con pato.
 
 # Para la presente prueba se realizará una prueba ANOVA de una vía para muestras
-# correlaciondas dado que se observa y/o plantea una interrelación entre las
+# correlacionadas dado que se observa y/o plantea una interrelación entre las
 # variables refiriendo al peso (en kilogramos) las cuales varían según el
 # alimento (sea pollo, res, conejo, pescado o pato), y grupo (grupo 8 en este
 # caso), asignado a lo largo del tiempo (1 mes). En este sentido, destacar
@@ -144,3 +149,4 @@ print(holm)
 # Pescado-Res y Pollo-Res presentan una diferencia significativa al comparar el
 # valor p ajustado otorgado por la corrección de Holm con el nivel de
 # significación establecido (alfa = 0.05).
+
