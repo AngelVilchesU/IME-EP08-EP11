@@ -12,6 +12,10 @@ if(!require(ez)){
   install.packages("ez", dependencies = TRUE)
   require(ez)
 }
+if(!require(dplyr)){
+  install.packages("dplyr", dependencies = TRUE)
+  require(dplyr)
+}
 
 ################################### Grupo 1 ################################### 
 # En este momento, los agrónomos buscan determinar si existen diferencias en
@@ -44,7 +48,8 @@ datos <- datos %>% filter(variedad == "Richard" |
                           variedad == "Fuji")
 datos <- droplevels(datos)
 
-# Se procede con la verificación de condiciones para el uso de ANOVA:
+# Se procede con la verificación de condiciones para el uso de ANOVA para 
+# muestras independientes:
 # En primer lugar, la variable dependiente, es decir, el peso de las manzanas
 # se mide utilizando una escala de intervalos iguales dada su proveniencia
 # a partir de una escala de razón cuyo origen es en un cero verdadero. Por lo
@@ -58,8 +63,6 @@ graficoQQ <- ggqqplot(datos,
                       x = "peso" ,
                       y = "variedad" ,
                       color = "variedad")
-
-
 graficoQQ <- graficoQQ + facet_wrap(~ variedad)
 graficoQQ <- graficoQQ + rremove("x.ticks") + rremove("x.text")
 graficoQQ <- graficoQQ + rremove("y.ticks") + rremove("y.text")
