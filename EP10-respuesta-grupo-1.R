@@ -151,8 +151,11 @@ jugadores <- c(datos_interes2$Id)
 nuevos_datos <- data.frame(jugadores, tiempos, niveles)
 
 # A continuación se plantea la hipótesis nula y alternativa:
-# H0: Los Niveles tienen una estimacion similar en cuanto a su tiempo de ejecucion.
-# HA: Los Niveles tienen estimaciones diferentes en cuanto a su tiempo de ejecucion.
+# H0: No existe diferencia en el tiempo que tardan los usuarios que jugaron con
+#     personaje tipo orco en completar los niveles 10, 20 y 30.
+# HA: Al menos un usuario presenta diferencias en el tiempo que tarda de acuerdo
+#     con quienes jugaron con personaje tipo orco en completar los niveles 10,
+#     20 y 30.
 
 # Se establece el nivel de significación en 0.05 ya que no se sugiere tener
 # especial cuidado en la prueba.
@@ -165,9 +168,9 @@ print(prueba_friedman)
 
 # De acuerdo con la prueba realizada, se obtiene un p-valor de 3.304e-11 el cual es
 # considerablemente menor que el nivel de significación establecido. Por lo 
-# tanto, se rechaza la hipótesis nula en favor de la hipótesisalternativa. 
+# tanto, se rechaza la hipótesis nula en favor de la hipótesis alternativa. 
 # Finalmente, se concluye que, con un 95% de confianza, que los niveles tienen una
-# diferencia significativa en cuanto a su tiempo de ejecucion.
+# diferencia significativa en cuanto al tiempo para completarles.
 
 # Dado que se presentaron diferencias entre los grupos evaluados en la presente
 # prueba, es necesario la implementación de pruebas post-hoc.
@@ -180,7 +183,6 @@ if (prueba_friedman$p.value < alfa) {
                                    nuevos_datos$niveles,
                                    p.adjust.method = "holm",
                                    paired = TRUE)
-  
   print(post_hoc)
 }
 
@@ -191,3 +193,6 @@ if (prueba_friedman$p.value < alfa) {
 # lo cual indica una diferencia estadísticamente significativa.
 # La comparación entre Nivel 30 y Nivel 20 tiene un valor de p de 0.00012, lo cual
 # también indica una diferencia estadísticamente significativa.
+# Finalmente, se observa que todos los tiempos asociados a los distintos niveles
+# 10, 20 y 30, difieren en cuanto a tiempo para completarles refiere para los
+# usuarios que escojieron un orco como su personaje.
