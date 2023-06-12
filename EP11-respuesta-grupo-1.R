@@ -12,6 +12,14 @@ if (!require(ggpubr)) {
   install.packages("ggpubr", dependencies = TRUE)
   require(ggpubr)
 }
+if(!require(tidyr)){
+  install.packages("tidyr", dependencies = TRUE)
+  require(tidyr)
+}
+if(!require(ez)){
+  install.packages("ez", dependencies = TRUE)
+  require(ez)
+}
 
 
 # Obtención de datos
@@ -20,6 +28,7 @@ datos <- read.csv2(file.choose(),
 
 ################################### Grupo 1 ################################### 
 ################################ Pregunta 1 ###################################
+cat("############################ Pregunta 1 ###############################\n")
 
 # Propongan una pregunta de investigación original, que involucre la comparación
 # de las medias de dos grupos independientes (más abajo se dan unos ejemplos).
@@ -51,6 +60,10 @@ hombres_solteros_rm <- muestra_hogares %>% filter(sexo == "Hombre" &
 # de acuerdo a la muestra obtenida anteriormente
 mujeres_solteras_rm <- muestra_hogares %>% filter(sexo == "Mujer" &
                                                   ecivil == "Soltero(a)")
+
+################################################################################
+# Gráficar
+################################################################################
 
 # Se responde a la pregunta propuesta utilizando una simulación Monte Carlo.
 # Primeramente, se define la hipótesis nula y alternativa junto con su 
@@ -104,10 +117,6 @@ dist <- lapply(1:R,
                n_hombres_solteros_rm,
                n_mujeres_solteras_rm)
 
-################################################################################
-# Gráficar
-################################################################################
-
 # Finalmente se calcula ep p-valor
 numerador   <- sum((dist) > abs(dif_observaciones)) + 1
 denominador <- R + 1
@@ -127,6 +136,7 @@ rm(dist, hombres_solteros_rm, muestra_hogares, mujeres_solteras_rm, alfa,
 
 ################################### Grupo 1 ################################### 
 ################################ Pregunta 2 ###################################
+cat("############################ Pregunta 2 ###############################\n")
 
 # Propongan una pregunta de investigación original, que involucre la comparación
 # de las medias de más de dos grupos independientes (más abajo se dan unos
@@ -136,7 +146,7 @@ rm(dist, hombres_solteros_rm, muestra_hogares, mujeres_solteras_rm, alfa,
 # post-hoc con bootstrapping aunque este no sea necesario.
 
 # Para la resolución de la presente interrogante, la pregunta propuesta es:
-# ¿En promedio, la edad de hombres y mujeres es igual en las regiones de 
+# ¿En promedio, la edad de las personas es igual en las regiones de 
 # Tarapacá, Valparaiso, La Araucanía y Metropolitana de Santiago?
 
 # A continuación se fija una semilla propia distinta a la anterior
@@ -146,7 +156,7 @@ set.seed(963)
 muestra_hogares <- sample_n(datos, 569)
 
 # Se seleccionan los datos de interés según la interrogante propuesta
-muestra_hogares <- muestra_hogares %>% select(region, edad, sexo)
+muestra_hogares <- muestra_hogares %>% select(region, edad, id.vivienda)
 muestra_hogares <- muestra_hogares %>% filter(region == "Region de Tarapaca" |
                                               region == "Region de Valparaiso" |
                                               region == "Region de La Araucania" |
@@ -179,11 +189,11 @@ reg_santiago <- muestra_hogares %>% filter(region ==
 #     Valparaiso, La Araucanía y Metropolitana de Santiago.
 #     (μA != μB != μC != μD)
 
-cat("Tamaño de las muestras para la región de Tarapacá: ", 
+cat("Tamaño de las muestras para la región de Tarapacá:               ", 
     nrow(reg_tarapaca), "\n")
-cat("Tamaño de las muestras para la región de Valpararaiso: ", 
+cat("Tamaño de las muestras para la región de Valpararaiso:           ", 
     nrow(reg_valparaiso), "\n")
-cat("Tamaño de las muestras para la región de La Araucanía: ", 
+cat("Tamaño de las muestras para la región de La Araucanía:           ", 
     nrow(reg_araucania), "\n")
 cat("Tamaño de las muestras para la región Metropolitana de Santiago: ",
     nrow(reg_santiago), "\n")
@@ -199,19 +209,52 @@ cat("Tamaño de las muestras para la región Metropolitana de Santiago: ",
 
 alfa <- 0.01
 
-# Se realiza la prueba de Kruskal-Wallis
-prueba_kruskal <- kruskal.test(edad ~ region,
-                               data = muestra_hogares)
-print(prueba_kruskal)
-
-# Es importante destacar que el p-valor de la prueba es de 0.004, lo cual es 
-# menor al nivel de significación establecido. Por lo que es posible mencionar
-# que desde ya se detectan diferencias entre las medias de las edades en las
-# distintas regiones seleccionadas
-
 # Se crea una cantidad B de muestras nuevas
 B <- 9639
 
+# Se obtiene la diferencia de las medias de acuerdo con las observaciones
+media_edad_aracania <- mean(reg_araucania[["edad"]])
+media_edad_santiago <- mean(reg_santiago[["edad"]])
+media_edad_valparaiso <- mean(reg_valparaiso[["edad"]])
+media_edad_tarapaca <- mean(reg_tarapaca[["edad"]])
+diferencia_observada <- media_edad_aracania - media_edad_santiago -
+                        media_edad_tarapaca - media_edad_valparaiso
+cat("Diferencia observada: ", diferencia_observada)
+
+# Se obtiene el dataframe anterior de muestras en formato ancho
+datos_anchos <- muestra_hogares %>% pivot_wider(names_from = "region",
+                                                values_from = "edad")
+
+###############################################################################
+# Función que retorna una permutación (bootstrap)
+bootstrap <- function(i, df_ancho) {
+  n <- nrow(df_ancho)
+  indices <- sample(1:n, replace = TRUE)
+  df_ancho_boot <- df_ancho[indices, ]
+  return(df_ancho_boot)
+}
+
+# Obtiene permutaciones
+permutaciones <- lapply(1:B, bootstrap, datos_anchos)
+
+F <- function(df_ancho) {
+  df_largo <- df_ancho %>%
+    pivot_longer(cols = c("Region de La Araucania", "Region de Valparaiso",
+                          "Region de Tarapaca", "Region Metropolitana de Santiago"),
+                 names_to = "Region",
+                 values_to = "Edad")
+  df_largo[["Region"]] <- factor(df_largo[["Region"]])
+  df_largo[["id.vivienda"]] <- factor(df_largo[["id.vivienda"]])
+  anova <- ezANOVA(df_largo, dv = Edad, within = Region, wid = id.vivienda,
+                   return_aov = TRUE)
+  return(anova[["ANOVA"]][["F"]])
+}
+
+distribucion_bootstrap <- sapply(permutaciones, F)
+
+###############################################################################
+#rm(muestra_hogares, reg_araucania, reg_santiago, reg_tarapaca, reg_valparaiso,
+#   alfa, B)
 
 
 
