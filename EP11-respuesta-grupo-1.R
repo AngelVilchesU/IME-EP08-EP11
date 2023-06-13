@@ -61,9 +61,31 @@ hombres_solteros_rm <- muestra_hogares %>% filter(sexo == "Hombre" &
 mujeres_solteras_rm <- muestra_hogares %>% filter(sexo == "Mujer" &
                                                   ecivil == "Soltero(a)")
 
-################################################################################
-# Gráficar
-################################################################################
+# Se extrae el número de hombres y mujeres solteras de acuerdo a la muestra
+# obtenida
+n_hombres_solteros <- nrow(hombres_solteros_rm)
+n_mujeres_solteras <- nrow(mujeres_solteras_rm)
+
+# Crear un dataframe con los datos
+datos_solteros <- data.frame(Grupo = c("Hombres",
+                                       "Mujeres"),
+                             Cantidad = c(n_hombres_solteros,
+                                        n_mujeres_solteras))
+
+# Se grafican los datos
+barplot(datos_solteros[["Cantidad"]],
+        names.arg = datos_solteros[["Grupo"]],
+        xlab = "Sexo",
+        ylab = "Solteros(as)",
+        main = "Hombres y Mujeres Solteras en la Región Metropolitana",
+        col = c("purple",
+                "green"),
+        ylim = c(0,
+                 max(datos_solteros[["Cantidad"]]) + 10))
+
+# De acuerdo al gráfico elaborado se puede observar una diferencia notable
+# entre la cantidad de hombres y mujeres solteros(as) en la Región Metropolitana
+# con una concentración en mujeres por sobre los hombres.
 
 # Se responde a la pregunta propuesta utilizando una simulación Monte Carlo.
 # Primeramente, se define la hipótesis nula y alternativa junto con su 
