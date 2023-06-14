@@ -73,7 +73,7 @@ datos_solteros <- data.frame(Grupo = c("Hombres",
                                         n_mujeres_solteras))
 
 # Se grafican los datos
-barplot(datos_solteros[["Cantidad"]],
+g1 <- barplot(datos_solteros[["Cantidad"]],
         names.arg = datos_solteros[["Grupo"]],
         xlab = "Sexo",
         ylab = "Solteros(as)",
@@ -82,6 +82,7 @@ barplot(datos_solteros[["Cantidad"]],
                 "green"),
         ylim = c(0,
                  max(datos_solteros[["Cantidad"]]) + 10))
+print(g1)
 
 # De acuerdo al gráfico elaborado se puede observar una diferencia notable
 # entre la cantidad de hombres y mujeres solteros(as) en la Región Metropolitana
@@ -182,11 +183,12 @@ muestra_hogares <- muestra_hogares %>% filter(region == "Region de Tarapaca" |
                                               region == "Region Metropolitana de Santiago")
 muestra_hogares <- droplevels(muestra_hogares)
 
-ggplot(muestra_hogares, aes(x = region)) +
-  geom_bar() +
-  labs(x = "Regiones", y = "Edades") +
-  ggtitle("Promedio de edades por región") +
-  theme_minimal()
+g2<- ggplot(muestra_hogares, aes(x = region)) +
+      geom_bar() +
+      labs(x = "Regiones", y = "Edades") +
+     ggtitle("Promedio de edades por región") +
+     theme_minimal()
+print(g2)
 
 # Se obtiene los datos referentes a la región de Tarapacá de acuerdo a la
 # muestra obtenida anteriormente
