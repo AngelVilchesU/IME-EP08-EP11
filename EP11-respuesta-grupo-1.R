@@ -152,9 +152,6 @@ print(p_valor)
 # Se rechaza la hipótesis nula en favor de la hipótesis alternativa. Por lo 
 # tanto se concluye, con un 95% de confianza, que la media de hombres y mujeres
 # soltero/as pertenecientes a la Región Metropolitana es diferente.
-rm(dist, hombres_solteros_rm, muestra_hogares, mujeres_solteras_rm, alfa, 
-   denominador, dif_observaciones, n_hombres_solteros_rm, n_mujeres_solteras_rm,
-   numerador, p_valor, R, permutar)
 
 ################################### Grupo 1 ################################### 
 ################################ Pregunta 2 ###################################
@@ -178,7 +175,7 @@ set.seed(963)
 muestra_hogares <- sample_n(datos, 569)
 
 # Se seleccionan los datos de interés según la interrogante propuesta
-muestra_hogares <- muestra_hogares %>% select(region, edad, id.vivienda)
+muestra_hogares <- muestra_hogares %>% select(region, edad)
 muestra_hogares <- muestra_hogares %>% filter(region == "Region de Tarapaca" |
                                               region == "Region de Valparaiso" |
                                               region == "Region de La Araucania" |
@@ -231,6 +228,15 @@ cat("Tamaño de las muestras para la región Metropolitana de Santiago: ",
 
 alfa <- 0.01
 
+kruskal <- kruskal.test(edad ~ region,
+                        data = muestra_hogares)
+kruskal_est <- kruskal[["statistic"]]
+print(kruskal)
+
+# En este sentido, se logra observar que p (0.004509) < alfa (0.01) por lo que
+# preliminarmente nos encontramos en la situación donde se observan diferencias
+# entre los grupos en estudio (regiones)
+
 # Se crea una cantidad B de muestras nuevas
 B <- 9639
 
@@ -243,42 +249,177 @@ diferencia_observada <- media_edad_aracania - media_edad_santiago -
                         media_edad_tarapaca - media_edad_valparaiso
 cat("Diferencia observada: ", diferencia_observada)
 
-# Se obtiene el dataframe anterior de muestras en formato ancho
-datos_anchos <- muestra_hogares %>% pivot_wider(names_from = "region",
-                                                values_from = "edad")
-
-###############################################################################
 # Función que retorna una permutación (bootstrap)
-bootstrap <- function(i, df_ancho) {
-  n <- nrow(df_ancho)
-  indices <- sample(1:n, replace = TRUE)
-  df_ancho_boot <- df_ancho[indices, ]
-  return(df_ancho_boot)
+bootstrap <- function(i, df){
+  n <- nrow(df)
+  remuestreado <- sample(df[["edad"]],
+                         n,
+                         replace = TRUE) # Replace = TRUE indica reposición
+  datos_nuevos <- data.frame(df[["region"]],
+                             remuestreado)
+  colnames(datos_nuevos) <- colnames(df)
+  return(datos_nuevos)
 }
 
-# Obtiene permutaciones
-permutaciones <- lapply(1:B, bootstrap, datos_anchos)
+# Se realiza el remuestreo correspondiente según bootstrap
+remuestreos <- lapply(1:B,
+                      bootstrap,
+                      muestra_hogares)
 
-F <- function(df_ancho) {
-  df_largo <- df_ancho %>%
-    pivot_longer(cols = c("Region de La Araucania", "Region de Valparaiso",
-                          "Region de Tarapaca", "Region Metropolitana de Santiago"),
-                 names_to = "Region",
-                 values_to = "Edad")
-  df_largo[["Region"]] <- factor(df_largo[["Region"]])
-  df_largo[["id.vivienda"]] <- factor(df_largo[["id.vivienda"]])
-  anova <- ezANOVA(df_largo, dv = Edad, within = Region, wid = id.vivienda,
-                   return_aov = TRUE)
-  return(anova[["ANOVA"]][["F"]])
+# Función que retorna el estadístico según la prueba de Kruskal-Wallis
+x2 <- function(df){
+  kruskal <- kruskal.test(edad ~ region,
+                          data = df)
+  return(kruskal[["statistic"]])
 }
 
-distribucion_bootstrap <- sapply(permutaciones, F)
+# Se obtiene la distribución bootstrap
+distribucion_bootstrap <- sapply(remuestreos,
+                                 x2)
 
-###############################################################################
-#rm(muestra_hogares, reg_araucania, reg_santiago, reg_tarapaca, reg_valparaiso,
-#   alfa, B)
+# Finalmente se calcula el p-valor
+pvalor <- (sum(abs(distribucion_bootstrap) > abs(kruskal_est)) + 1) / (B + 1)
+cat("\n")
+print(pvalor)
 
+# Según el p valor obtenido, este es significativamente menor que el nivel de 
+# significación establecido anteriormente, p (≈ 0.00311) < alfa (0.01). Por lo 
+# tanto, se rechaza la hipótesis nula en favor de la hipótesis alternativa. En
+# este sentido, se concluye, con un 99% de confianza, que la media de las edades
+# es diferente para al menos una de las regiones, sea la región de Tarapacá,
+# Valparaiso, La Araucanía y/o Metropolitana de Santiago.
 
+# A continuación se realiza un análisis post-hoc dado que, por un lado, se 
+# solicita como ejercicio académico y, por otro lado, se observan diferencias
+# entre el/los grupo/s.
 
+# Recordar que trabajamos con 4 regiones, por lo tanto, abarcamos, 6 pares.
+# En este sentido, se realiza la prueba de rangos de Wilcoxon de acuerdo con
+# 2 muestras independientes, es decir, cada par (6)
 
+par1 <- wilcox.test(muestra_hogares[muestra_hogares[["region"]] == "Region de Valparaiso",
+                                      "edad"],
+                      muestra_hogares[muestra_hogares[["region"]] == "Region de La Araucania",
+                                      "edad"],
+                      alternative = "two.sided",
+                      conf.level = 1 - alfa)
 
+par2 <- wilcox.test(muestra_hogares[muestra_hogares[["region"]] == "Region de Valparaiso",
+                                    "edad"],
+                    muestra_hogares[muestra_hogares[["region"]] == "Region Metropolitana de Santiago",
+                                    "edad"],
+                    alternative = "two.sided",
+                    conf.level = 1 - alfa)
+
+par3 <- wilcox.test(muestra_hogares[muestra_hogares[["region"]] == "Region de Valparaiso",
+                                    "edad"],
+                    muestra_hogares[muestra_hogares[["region"]] == "Region de Tarapaca",
+                                    "edad"],
+                    alternative = "two.sided",
+                    conf.level = 1 - alfa)
+
+par4 <- wilcox.test(muestra_hogares[muestra_hogares[["region"]] == "Region de La Araucania",
+                                    "edad"],
+                    muestra_hogares[muestra_hogares[["region"]] == "Region Metropolitana de Santiago",
+                                    "edad"],
+                    alternative = "two.sided",
+                    conf.level = 1 - alfa)
+
+par5 <- wilcox.test(muestra_hogares[muestra_hogares[["region"]] == "Region de La Araucania",
+                                    "edad"],
+                    muestra_hogares[muestra_hogares[["region"]] == "Region de Tarapaca",
+                                    "edad"],
+                    alternative = "two.sided",
+                    conf.level = 1 - alfa)
+
+par6 <- wilcox.test(muestra_hogares[muestra_hogares[["region"]] == "Region Metropolitana de Santiago",
+                                    "edad"],
+                    muestra_hogares[muestra_hogares[["region"]] == "Region de Tarapaca",
+                                    "edad"],
+                    alternative = "two.sided",
+                    conf.level = 1 - alfa)
+
+# Se extraen los estadísticos respectivos
+est_par1 <- par1[["statistic"]]
+est_par2 <- par2[["statistic"]]
+est_par3 <- par3[["statistic"]]
+est_par4 <- par4[["statistic"]]
+est_par5 <- par5[["statistic"]]
+est_par6 <- par6[["statistic"]]
+
+# Función que retorna el estadístico según la diferencia de los remuestreos
+# con reposición (bootstrap)
+obtener_estadistico <- function(df, r1, r2) {
+  comp <- wilcox.test(df[df[["region"]] == r1,
+                            "edad"],
+                         df[df[["region"]] == r2,
+                            "edad"],
+                         alternative = "two.sided",
+                         conf.level = 1 - alfa)
+  return(comp[["statistic"]])
+}
+
+# Se obtiene las distribuciones según cada par definido anteriormente
+dist1 <- sapply(remuestreos,
+                obtener_estadistico,
+                "Region de Valparaiso",
+                "Region de La Araucania")
+dist2 <- sapply(remuestreos,
+                obtener_estadistico,
+                "Region de Valparaiso",
+                "Region Metropolitana de Santiago")
+dist3 <- sapply(remuestreos,
+                obtener_estadistico,
+                "Region de Valparaiso",
+                "Region de Tarapaca")
+dist4 <- sapply(remuestreos,
+                obtener_estadistico,
+                "Region de La Araucania",
+                "Region Metropolitana de Santiago")
+dist5 <- sapply(remuestreos,
+                obtener_estadistico,
+                "Region de La Araucania",
+                "Region de Tarapaca")
+dist6 <- sapply(remuestreos,
+                obtener_estadistico,
+                "Region Metropolitana de Santiago",
+                "Region de Tarapaca")
+
+# Se calcula el p-valor para cada par correspondiente
+denominador <- B + 1
+
+numerador <- sum(abs(dist1) > abs(est_par1)) + 1
+p_par1 <- numerador / denominador
+cat("Post-hoc Valparaiso - La Araucanía:",p_par1 ,"\n")
+
+numerador <- sum(abs(dist2) > abs(est_par2)) + 1
+p_par2 <- numerador / denominador
+cat("Post-hoc Valparaiso - Metropolitana:",p_par2 ,"\n")
+
+numerador <- sum(abs(dist3) > abs(est_par3)) + 1
+p_par3 <- numerador / denominador
+cat("Post-hoc Valparaiso - Tarapacá:",p_par3 ,"\n")
+
+numerador <- sum(abs(dist4) > abs(est_par4)) + 1
+p_par4 <- numerador / denominador
+cat("Post-hoc La Araucanía - Metropolitana:",p_par4 ,"\n")
+
+numerador <- sum(abs(dist5) > abs(est_par5)) + 1
+p_par5 <- numerador / denominador
+cat("Post-hoc La Araucania - Tarapacá:",p_par5 ,"\n")
+
+numerador <- sum(abs(dist6) > abs(est_par6)) + 1
+p_par6 <- numerador / denominador
+cat("Post-hoc Metropolitana - Tarapacá:",p_par6 ,"\n")
+
+# Post-hoc Valparaiso - La Araucanía: 0.4188797 
+# Post-hoc Valparaiso - Metropolitana: 0.2852697 
+# Post-hoc Valparaiso - Tarapacá: 0.0005186722 
+# Post-hoc La Araucanía - Metropolitana: 0.4821577 
+# Post-hoc La Araucania - Tarapacá: 0.001452282 
+# Post-hoc Metropolitana - Tarapacá: 0.001452282
+
+# De acuerdo a los resultados obtenidos según las pruebas realizadas, se concluye
+# que, con un 99% de confianza, la media de las edades es diferente para 
+# la región de Tarapacá con respecto a las regiones de Valparaiso, La Araucanía
+# y Metropolitana de Santiago (es decir, 3 pares).
