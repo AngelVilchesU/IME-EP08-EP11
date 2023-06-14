@@ -182,6 +182,12 @@ muestra_hogares <- muestra_hogares %>% filter(region == "Region de Tarapaca" |
                                               region == "Region Metropolitana de Santiago")
 muestra_hogares <- droplevels(muestra_hogares)
 
+ggplot(muestra_hogares, aes(x = region)) +
+  geom_bar() +
+  labs(x = "Regiones", y = "Edades") +
+  ggtitle("Promedio de edades por región") +
+  theme_minimal()
+
 # Se obtiene los datos referentes a la región de Tarapacá de acuerdo a la
 # muestra obtenida anteriormente
 reg_tarapaca <- muestra_hogares %>% filter(region == "Region de Tarapaca")
